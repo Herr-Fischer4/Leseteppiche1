@@ -1,0 +1,431 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#315d48">
+  <title>Leseteppiche – O, M, E, A</title>
+  <style>
+    :root {
+      --green: #315d48;
+      --green-dark: #244b38;
+      --mint: #eaf2e9;
+      --paper: #fffdf7;
+      --ink: #26352e;
+      --muted: #66766b;
+      --line: #c9d4c8;
+      --coral: #e98268;
+      --gold: #f4d884;
+      --blue: #deedf6;
+      --lilac: #eee7f6;
+      --shadow: 0 12px 34px #1e38251c;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      padding: 22px;
+      color: var(--ink);
+      background: #e9eee8;
+      font-family: "Trebuchet MS", Arial, sans-serif;
+    }
+    button, select { font: inherit; }
+    button { cursor: pointer; }
+    .app { max-width: 1080px; margin: 0 auto; }
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .toolbar h1 { margin: 0; color: var(--green); font-size: clamp(1.3rem, 3vw, 1.9rem); }
+    .actions { display: flex; flex-wrap: wrap; gap: 8px; }
+    .action {
+      border: 0;
+      border-radius: 10px;
+      padding: 10px 14px;
+      color: #fff;
+      background: var(--green);
+      font-weight: 700;
+    }
+    .action:hover { background: var(--green-dark); }
+    .action.secondary { color: var(--green); background: white; border: 1px solid var(--line); }
+    .selector {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px;
+      padding: 12px 14px;
+      border: 1px solid #d7e0d5;
+      border-radius: 12px;
+      background: #f8fbf7;
+    }
+    .selector label { font-weight: 700; color: var(--green); }
+    select {
+      min-width: 230px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 9px 34px 9px 11px;
+      color: var(--ink);
+      background: white;
+    }
+    .hint { margin-left: auto; color: var(--muted); font-size: .9rem; }
+    .sheet {
+      position: relative;
+      overflow: hidden;
+      padding: clamp(17px, 3vw, 30px);
+      border: 8px solid #d9e3d7;
+      border-radius: 16px;
+      background: var(--paper);
+      box-shadow: var(--shadow);
+    }
+    .sheet::before, .sheet::after {
+      position: absolute;
+      z-index: 0;
+      width: 82px;
+      height: 11px;
+      border-radius: 8px;
+      background: #d6b75c;
+      content: "";
+    }
+    .sheet::before { top: 10px; left: 28px; transform: rotate(-4deg); }
+    .sheet::after { right: 28px; bottom: 10px; transform: rotate(4deg); }
+    .sheet-content { position: relative; z-index: 1; }
+    .sheet-header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 15px;
+      margin-bottom: 17px;
+    }
+    .heading { display: flex; align-items: center; gap: 12px; }
+    .icon {
+      display: grid;
+      width: 54px;
+      height: 54px;
+      flex: 0 0 auto;
+      place-items: center;
+      border-radius: 16px;
+      color: white;
+      background: var(--coral);
+      font-size: 27px;
+    }
+    h2 { margin: 0; color: var(--green); font-size: clamp(1.45rem, 4vw, 2.2rem); }
+    .subtitle { margin: 4px 0 0; color: var(--muted); }
+    .name { display: flex; align-items: center; gap: 8px; white-space: nowrap; }
+    .name input {
+      width: 155px;
+      border: 0;
+      border-bottom: 2px solid var(--line);
+      padding: 7px 2px;
+      outline: 0;
+      background: transparent;
+      font: inherit;
+    }
+    .letter-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 15px;
+      padding: 10px 12px;
+      border-radius: 11px;
+      background: var(--mint);
+    }
+    .letter-bar strong { margin-right: 3px; }
+    .letter-filter {
+      min-width: 38px;
+      border: 2px solid #bfd2c1;
+      border-radius: 8px;
+      padding: 4px 10px;
+      color: var(--green);
+      background: white;
+      font-size: 1.1rem;
+      font-weight: 800;
+    }
+    .letter-filter[aria-pressed="true"] { border-color: var(--coral); background: #fff0e9; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 9px;
+    }
+    .section-label {
+      grid-column: 1 / -1;
+      margin: 8px 0 -2px;
+      color: #718075;
+      font-size: .76rem;
+      font-weight: 800;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+    }
+    .tile {
+      display: flex;
+      min-height: 82px;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      border: 1.5px solid var(--line);
+      border-radius: 11px;
+      color: var(--ink);
+      background: white;
+      transition: transform .12s ease, box-shadow .12s ease, opacity .12s ease;
+    }
+    .tile:hover { transform: translateY(-2px); box-shadow: 0 5px 12px #26352e19; }
+    .tile:focus-visible, button:focus-visible, select:focus-visible, input:focus-visible { outline: 3px solid var(--coral); outline-offset: 2px; }
+    .tile.syllable { background: #fbfcf8; }
+    .tile.word { background: #fff9ed; }
+    .tile.read { border-color: var(--green); background: #e5f1e5; }
+    .tile.dimmed { opacity: .22; }
+    .tile .text { font-size: clamp(1.35rem, 4vw, 2rem); font-weight: 800; letter-spacing: .02em; }
+    .tile .emoji { font-size: 1.15rem; }
+    footer {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 8px;
+      margin-top: 14px;
+      color: var(--muted);
+      font-size: .9rem;
+    }
+    #progress { font-weight: 700; }
+    @media (max-width: 560px) {
+      body { padding: 10px; }
+      .sheet { padding: 16px 11px; border-width: 5px; }
+      .hint { width: 100%; margin-left: 0; }
+      .grid { gap: 6px; }
+      .tile { min-height: 70px; }
+    }
+    @media print {
+      @page { size: A4 portrait; margin: 10mm; }
+      body { padding: 0; background: white; }
+      .app { max-width: none; }
+      .toolbar, .selector, .letter-bar { display: none !important; }
+      .sheet { min-height: 270mm; border: 2px solid #9aaa9b; border-radius: 0; box-shadow: none; }
+      .sheet::before, .sheet::after { display: none; }
+      .tile { min-height: 20mm; box-shadow: none; }
+      .tile.dimmed { opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <div class="toolbar">
+      <h1>Leseteppiche mit O, M, E und A</h1>
+      <div class="actions">
+        <button class="action" id="readAll" type="button">▶ Alles vorlesen</button>
+        <button class="action secondary" id="reset" type="button">↺ Zurücksetzen</button>
+        <button class="action secondary" id="print" type="button">⎙ Drucken</button>
+      </div>
+    </div>
+
+    <div class="selector">
+      <label for="carpetSelect">Teppich auswählen:</label>
+      <select id="carpetSelect" aria-label="Leseteppich auswählen"></select>
+      <button class="action secondary" id="shuffle" type="button">⤨ Andere Anordnung</button>
+      <span class="hint">Mehrere Teppiche mit neuen Reihenfolgen und Wortkombinationen</span>
+    </div>
+
+    <section class="sheet" aria-label="Interaktiver Leseteppich">
+      <div class="sheet-content">
+        <header class="sheet-header">
+          <div class="heading">
+            <div class="icon" aria-hidden="true">📖</div>
+            <div>
+              <h2 id="carpetTitle">Mein Leseteppich</h2>
+              <p class="subtitle" id="carpetSubtitle">Ich schaue genau hin und lese laut.</p>
+            </div>
+          </div>
+          <label class="name">Name: <input type="text" aria-label="Name"></label>
+        </header>
+
+        <nav class="letter-bar" aria-label="Buchstaben im Teppich hervorheben">
+          <strong>Finde einen Buchstaben:</strong>
+          <button class="letter-filter" type="button" data-letter="O" aria-pressed="false">O</button>
+          <button class="letter-filter" type="button" data-letter="M" aria-pressed="false">M</button>
+          <button class="letter-filter" type="button" data-letter="E" aria-pressed="false">E</button>
+          <button class="letter-filter" type="button" data-letter="A" aria-pressed="false">A</button>
+          <span>Tippe auf einen Buchstaben, um passende Kärtchen zu suchen.</span>
+        </nav>
+
+        <div class="grid" id="grid" aria-live="polite"></div>
+        <footer>
+          <span>Tippe auf ein Kärtchen, um es zu hören.</span>
+          <span id="progress">Schon gelesen: 0</span>
+        </footer>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const carpets = [
+      {
+        title: "Teppich 1 – Schritt für Schritt",
+        subtitle: "Erst Buchstaben, dann Silben und Wörter.",
+        letters: ["O", "M", "E", "A"],
+        syllables: ["ma", "me", "mo", "am", "om", "em", "ma", "me"],
+        words: ["Mama", "Oma", "Emma", "Memo", "Momo", "Mama", "Oma", "Emma"]
+      },
+      {
+        title: "Teppich 2 – Buchstabenmix",
+        subtitle: "Lies von links nach rechts und von oben nach unten.",
+        letters: ["M", "A", "O", "E"],
+        syllables: ["om", "ma", "em", "mo", "me", "am", "me", "ma"],
+        words: ["Oma", "Momo", "Mama", "Emma", "Memo", "Oma", "Emma", "Mama"]
+      },
+      {
+        title: "Teppich 3 – Silben entdecken",
+        subtitle: "Kannst du die Silben wiederfinden?",
+        letters: ["E", "O", "A", "M"],
+        syllables: ["me", "om", "ma", "em", "am", "mo", "ma", "om"],
+        words: ["Emma", "Memo", "Oma", "Mama", "Momo", "Emma", "Oma", "Memo"]
+      },
+      {
+        title: "Teppich 4 – Wortreise",
+        subtitle: "Lies die Wörter und achte auf die vier Buchstaben.",
+        letters: ["A", "E", "M", "O"],
+        syllables: ["am", "em", "mo", "ma", "om", "me", "om", "am"],
+        words: ["Momo", "Mama", "Memo", "Oma", "Emma", "Momo", "Mama", "Memo"]
+      },
+      {
+        title: "Teppich 5 – Noch einmal anders",
+        subtitle: "Ein neuer Weg durch Buchstaben, Silben und Wörter.",
+        letters: ["O", "A", "M", "E"],
+        syllables: ["mo", "me", "am", "ma", "em", "om", "me", "mo"],
+        words: ["Memo", "Emma", "Mama", "Oma", "Emma", "Momo", "Oma", "Mama"]
+      }
+    ];
+
+    const emojis = { Mama: "👩‍👧", Oma: "👵", Emma: "🧒", Memo: "📝", Momo: "🐒" };
+    const grid = document.getElementById("grid");
+    const select = document.getElementById("carpetSelect");
+    const title = document.getElementById("carpetTitle");
+    const subtitle = document.getElementById("carpetSubtitle");
+    const progress = document.getElementById("progress");
+    let activeLetter = "";
+    let readCount = 0;
+    let currentCarpet = 0;
+    let shuffleCount = 0;
+
+    carpets.forEach((carpet, index) => {
+      const option = document.createElement("option");
+      option.value = index;
+      option.textContent = carpet.title;
+      select.append(option);
+    });
+
+    function addSectionLabel(text) {
+      const label = document.createElement("div");
+      label.className = "section-label";
+      label.textContent = text;
+      grid.append(label);
+    }
+
+    function addTile(text, type) {
+      const tile = document.createElement("button");
+      tile.type = "button";
+      tile.className = `tile ${type}`;
+      tile.dataset.text = text;
+      tile.setAttribute("aria-label", `Vorlesen: ${text}`);
+      if (type === "word") {
+        const emoji = document.createElement("span");
+        emoji.className = "emoji";
+        emoji.setAttribute("aria-hidden", "true");
+        emoji.textContent = emojis[text] || "";
+        tile.append(emoji);
+      }
+      const label = document.createElement("span");
+      label.className = "text";
+      label.textContent = text;
+      tile.append(label);
+      tile.addEventListener("click", () => {
+        tile.classList.add("read");
+        readCount++;
+        updateProgress();
+        speak(text);
+      });
+      grid.append(tile);
+    }
+
+    function render(index) {
+      currentCarpet = Number(index);
+      const carpet = carpets[currentCarpet];
+      title.textContent = carpet.title;
+      subtitle.textContent = carpet.subtitle;
+      grid.replaceChildren();
+      addSectionLabel("Buchstaben");
+      carpet.letters.forEach(letter => addTile(letter, "letter"));
+      addSectionLabel("Silben");
+      carpet.syllables.forEach(syllable => addTile(syllable, "syllable"));
+      addSectionLabel("Wörter");
+      carpet.words.forEach(word => addTile(word, "word"));
+      resetProgress();
+      applyLetterFilter();
+    }
+
+    function speak(text) {
+      if (!("speechSynthesis" in window)) {
+        alert("Die Vorlesefunktion wird von diesem Browser nicht unterstützt.");
+        return;
+      }
+      speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = "de-DE";
+      utterance.rate = 0.82;
+      speechSynthesis.speak(utterance);
+    }
+
+    function updateProgress() {
+      progress.textContent = `Schon gelesen: ${readCount}`;
+    }
+
+    function resetProgress() {
+      readCount = 0;
+      updateProgress();
+    }
+
+    function applyLetterFilter() {
+      document.querySelectorAll(".tile").forEach(tile => {
+        const matches = tile.dataset.text.toUpperCase().includes(activeLetter);
+        tile.classList.toggle("dimmed", Boolean(activeLetter) && !matches);
+      });
+      document.querySelectorAll(".letter-filter").forEach(button => {
+        button.setAttribute("aria-pressed", String(button.dataset.letter === activeLetter));
+      });
+    }
+
+    document.querySelectorAll(".letter-filter").forEach(button => {
+      button.addEventListener("click", () => {
+        activeLetter = activeLetter === button.dataset.letter ? "" : button.dataset.letter;
+        applyLetterFilter();
+      });
+    });
+
+    select.addEventListener("change", () => render(select.value));
+    document.getElementById("readAll").addEventListener("click", () => {
+      speak([...document.querySelectorAll(".tile")].map(tile => tile.dataset.text).join(", "));
+    });
+    document.getElementById("reset").addEventListener("click", () => {
+      document.querySelectorAll(".tile").forEach(tile => tile.classList.remove("read"));
+      activeLetter = "";
+      applyLetterFilter();
+      resetProgress();
+      if ("speechSynthesis" in window) speechSynthesis.cancel();
+    });
+    document.getElementById("print").addEventListener("click", () => window.print());
+    document.getElementById("shuffle").addEventListener("click", () => {
+      shuffleCount++;
+      const next = (currentCarpet + 1) % carpets.length;
+      select.value = String(next);
+      render(next);
+      document.getElementById("shuffle").textContent = shuffleCount % 2 ? "⤨ Noch eine Anordnung" : "⤨ Andere Anordnung";
+    });
+
+    render(0);
+  </script>
+</body>
+</html>
