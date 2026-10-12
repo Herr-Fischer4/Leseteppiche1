@@ -1,35 +1,121 @@
-function speechText(text) {
-  const key = text.toLocaleLowerCase("de-DE");
-  if (key === "om") return "Ohm";
-  if (key === "me") return "Mee";
-  return text;
-}
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Interaktiver Leseteppich mit O, M, E und A">
+  <meta name="theme-color" content="#315d48">
+  <title>Leseteppiche – O, M, E und A</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&display=swap');
+    :root{--ink:#26352e;--green:#315d48;--mint:#eaf2e9;--paper:#fffdf5;--coral:#e98268;--line:#bdc9bb;--focus:#a3442c;font-family:"Comic Neue","Comic Sans MS","Chalkboard",cursive,sans-serif}
+    *{box-sizing:border-box}body{margin:0;padding:22px;color:var(--ink);background:#e9eee8}button,input,select{font:inherit}button{cursor:pointer}.app{max-width:1050px;margin:0 auto}
+    .toolbar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}h1{margin:0;color:var(--green);font-size:clamp(1.35rem,4vw,2rem)}.actions{display:flex;flex-wrap:wrap;gap:8px}
+    .action,.select-wrap select{min-height:42px;padding:9px 13px;border:0;border-radius:10px;color:white;background:var(--green);font-weight:700}.action:hover,.select-wrap select:hover{background:#244b38}:focus-visible{outline:3px solid var(--focus);outline-offset:3px}
+    .sheet{padding:clamp(16px,3vw,30px);border:8px solid #d9e3d7;border-radius:16px;background:var(--paper);box-shadow:0 10px 30px #26352e1c}.topline{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-bottom:16px}.title-block{display:flex;align-items:center;gap:12px}
+    .book-icon{display:grid;width:52px;height:52px;flex:0 0 auto;place-items:center;border-radius:15px;color:white;background:var(--coral);font-size:27px}h2{margin:0;color:var(--green);font-size:clamp(1.4rem,4vw,2rem)}.subtitle{margin:4px 0 0;color:#637268}.name{display:flex;align-items:center;gap:8px;white-space:nowrap}.name input{width:155px;padding:6px 2px;border:0;border-bottom:2px solid var(--line);background:transparent}
+    .controls{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin:0 0 16px;padding:12px;border-radius:12px;background:var(--mint)}.controls label{font-weight:700}.select-wrap select{min-height:38px;padding:6px 10px}.letter-tools{display:flex;flex-wrap:wrap;align-items:center;gap:7px}
+    .letter-chip{min-width:38px;padding:5px 10px;border:2px solid #bfd2c1;border-radius:9px;color:var(--green);background:white;font-size:1.2rem;font-weight:700}.letter-chip.active{border-color:var(--coral);background:#fff0e9}.hint{color:#53645a;font-size:.92rem}
+    .grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px}.section-label{grid-column:1/-1;margin:9px 0 -3px;color:#738177;font-size:.8rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase}
+    .tile{display:flex;min-height:86px;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:7px;border:1.5px solid var(--line);border-radius:12px;color:var(--ink);background:white;cursor:pointer;transition:transform .12s ease,box-shadow .12s ease,background .12s ease}.tile:hover{transform:translateY(-2px);box-shadow:0 5px 12px #26352e16}.tile .word{font-size:clamp(1.35rem,4vw,2rem);font-weight:700;letter-spacing:.02em}.tile .emoji{font-size:1.15rem}.tile.syllable{background:#fbfcf8}.tile.word-card{background:#fff9ed}.tile.read{border-color:var(--green);background:#e5f1e5}.tile.dimmed{opacity:.25}.school-letter{font-family:"Comic Neue","Comic Sans MS","Chalkboard",cursive,sans-serif;font-weight:700}
+    .footer{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;margin-top:16px;color:#647268;font-size:.92rem}#progress{font-weight:700}
+    @media(max-width:560px){body{padding:11px}.sheet{padding:15px 11px;border-width:5px}.topline{align-items:flex-start;flex-direction:column}.name{align-self:stretch}.name input{flex:1}.grid{gap:6px}.tile{min-height:72px}}
+    @media print{body{padding:0;background:white}.app{max-width:none}.toolbar,.controls{display:none!important}.sheet{min-height:95vh;border:2px solid #9aaa9b;border-radius:0;box-shadow:none}.tile{min-height:86px;box-shadow:none}.tile.dimmed{opacity:1}}
+  </style>
+</head>
+<body>
+  <main class="app">
+    <div class="toolbar">
+      <h1>Leseteppiche: O, M, E und A</h1>
+      <div class="actions">
+        <button class="action" id="readAll" type="button">▶ Alles vorlesen</button>
+        <button class="action" id="reset" type="button">↺ Zurücksetzen</button>
+        <button class="action" id="print" type="button">⎙ Drucken</button>
+      </div>
+    </div>
+    <section class="sheet" aria-label="Leseteppich">
+      <div class="topline">
+        <div class="title-block"><div class="book-icon" aria-hidden="true">📖</div><div><h2 id="carpetTitle">Teppich 1: Buchstaben und Silben</h2><p class="subtitle">Ich schaue genau hin und lese laut.</p></div></div>
+        <label class="name">Name: <input type="text" aria-label="Name"></label>
+      </div>
+      <div class="controls">
+        <div class="select-wrap"><label for="carpetSelect">Leseteppich:</label>
+          <select id="carpetSelect" aria-label="Leseteppich auswählen">
+            <option value="0">1 – Buchstaben und Silben</option><option value="1">2 – Silbenmix</option><option value="2">3 – Wörter</option><option value="3">4 – Gemischter Teppich</option>
+          </select>
+        </div>
+        <div class="letter-tools" aria-label="Buchstaben im Teppich suchen"><strong>Suche:</strong>
+          <button class="letter-chip" type="button" data-letter="O">O</button><button class="letter-chip" type="button" data-letter="M">M</button><button class="letter-chip" type="button" data-letter="E">E</button><button class="letter-chip" type="button" data-letter="A">A</button>
+        </div>
+        <span class="hint">Das kleine a erscheint in einer gut lesbaren Schreibform. Beim M-Kärtchen erklingt der Laut /m/.</span>
+      </div>
+      <div class="grid" id="readingGrid" aria-live="polite"></div>
+      <footer class="footer"><span>Tippe oder klicke auf ein Kärtchen, um es zu hören.</span><span id="progress">Schon gelesen: 0</span></footer>
+    </section>
+  </main>
+<script>
+  "use strict";
+  const carpets = [
+    {title:"Teppich 1: Buchstaben und Silben",groups:[
+      {label:"Große Buchstaben",items:["O","M","E","A"]},
+      {label:"Kleine Buchstaben",items:["o","m","e","a"]},
+      {label:"Silben",items:["ma","me","mo","am","om","em","ma","me"]}]},
+    {title:"Teppich 2: Silbenmix",groups:[
+      {label:"Lies die Silben",items:["ma","am","me","em","mo","om","ma","mo","me","am","om","em"]},
+      {label:"Kleine Buchstaben",items:["a","o","m","e"]}]},
+    {title:"Teppich 3: Wörter",groups:[{label:"Lies die Wörter",items:[
+      {text:"Mama",emoji:"👩‍👧"},{text:"Oma",emoji:"👵"},{text:"Emma",emoji:"🧒"},{text:"Memo",emoji:"📝"},
+      {text:"Momo",emoji:"🐒"},{text:"Oma",emoji:"🏡"},{text:"Mama",emoji:"💛"},{text:"Emma",emoji:"🌼"}]}]},
+    {title:"Teppich 4: Alles gemischt",groups:[
+      {label:"Lies von links nach rechts",items:["M","ma","Oma","e","mo","A","Mama","om","E","me","Emma","a"]},
+      {label:"Noch einmal",items:["am","Momo","o","em","O","Memo","m","A"]}]}
+  ];
+  const grid=document.getElementById("readingGrid"), title=document.getElementById("carpetTitle"), progress=document.getElementById("progress");
+  let readCount=0, selectedLetter="", audioContext;
 
-function getGermanVoice() {
-  if (!("speechSynthesis" in window)) return null;
-  const voices = window.speechSynthesis.getVoices();
-
-  return voices.find(v => v.lang.toLowerCase() === "de-de")
-      || voices.find(v => v.lang.toLowerCase().startsWith("de-"))
-      || voices.find(v => v.lang.toLowerCase() === "de")
-      || null;
-}
-
-function speak(text, onEnd) {
-  if (!("speechSynthesis" in window)) {
-    if (onEnd) onEnd();
-    return;
+  function isLetterCard(text){return /^[OMEAomea]$/.test(text)}
+  function createTile(item){
+    const data=typeof item==="string"?{text:item}:item, tile=document.createElement("button");
+    tile.type="button";tile.className="tile";tile.dataset.text=data.text;
+    if(data.text.length>2)tile.classList.add("word-card");else if(data.text.length===2)tile.classList.add("syllable");
+    if(isLetterCard(data.text))tile.dataset.letterCard="true";
+    if(data.emoji){const emoji=document.createElement("span");emoji.className="emoji";emoji.setAttribute("aria-hidden","true");emoji.textContent=data.emoji;tile.append(emoji)}
+    const word=document.createElement("span");word.className="word";if(/^[omea]$/.test(data.text))word.classList.add("school-letter");word.textContent=data.text;tile.append(word);
+    tile.setAttribute("aria-label",data.text.toLowerCase()==="m"?`${data.text}, Laut mmm`:`Vorlesen: ${data.text}`);
+    tile.addEventListener("click",()=>{tile.classList.add("read");readCount++;updateProgress();data.text.toLowerCase()==="m"?playMmm():speak(data.text)});
+    return tile;
   }
+  function renderCarpet(index){const carpet=carpets[index];title.textContent=carpet.title;grid.replaceChildren();for(const group of carpet.groups){const label=document.createElement("div");label.className="section-label";label.textContent=group.label;grid.append(label);for(const item of group.items)grid.append(createTile(item))}readCount=0;updateProgress();applyLetterFilter()}
+  function updateProgress(){progress.textContent=`Schon gelesen: ${readCount}`}
 
-  window.speechSynthesis.cancel();
+  // The browser's German voice is selected explicitly where available. “Ohm” and
+  // “Mee” are pronunciation spellings for speech only; the displayed cards stay “om” and “me”.
+  function speechText(text){const key=text.toLocaleLowerCase("de-DE");if(key==="om")return "Ohm";if(key==="me")return "Mee";return text}
+  function getGermanVoice(){if(!("speechSynthesis" in window))return null;const voices=window.speechSynthesis.getVoices();return voices.find(v=>v.lang.toLowerCase()==="de-de")||voices.find(v=>v.lang.toLowerCase().startsWith("de-"))||voices.find(v=>v.lang.toLowerCase()==="de")||null}
+  function speak(text,onEnd){
+    if(!("speechSynthesis" in window)){if(onEnd)onEnd();else announce("Die Vorlesefunktion wird von diesem Browser nicht unterstützt.");return}
+    window.speechSynthesis.cancel();const utterance=new SpeechSynthesisUtterance(speechText(text));utterance.lang="de-DE";utterance.rate=0.78;
+    const voice=getGermanVoice();if(voice)utterance.voice=voice;if(onEnd)utterance.onend=onEnd;window.speechSynthesis.speak(utterance);
+  }
+  function playMmm(onEnd){
+    const AudioContextClass=window.AudioContext||window.webkitAudioContext;
+    if(!AudioContextClass){announce("Sprich den Laut /m/: Lippen schließen und kurz summen.");if(onEnd)setTimeout(onEnd,500);return}
+    try{audioContext=audioContext||new AudioContextClass();if(audioContext.state==="suspended")audioContext.resume();const now=audioContext.currentTime,osc=audioContext.createOscillator(),filter=audioContext.createBiquadFilter(),gain=audioContext.createGain();
+      osc.type="sawtooth";osc.frequency.setValueAtTime(115,now);filter.type="lowpass";filter.frequency.setValueAtTime(420,now);filter.Q.setValueAtTime(.7,now);gain.gain.setValueAtTime(0,now);gain.gain.linearRampToValueAtTime(.12,now+.055);gain.gain.setValueAtTime(.12,now+.34);gain.gain.linearRampToValueAtTime(0,now+.48);osc.connect(filter).connect(gain).connect(audioContext.destination);osc.start(now);osc.stop(now+.5);if(onEnd)setTimeout(onEnd,600)
+    }catch(error){announce("Sprich den Laut /m/: Lippen schließen und kurz summen.");if(onEnd)setTimeout(onEnd,500)}
+  }
+  function announce(message){const previous=progress.textContent;progress.textContent=message;setTimeout(()=>{progress.textContent=previous},2800)}
+  function applyLetterFilter(){document.querySelectorAll(".tile").forEach(tile=>{const matches=tile.dataset.text.toUpperCase().includes(selectedLetter);tile.classList.toggle("dimmed",Boolean(selectedLetter)&&!matches)})}
 
-  const utterance = new SpeechSynthesisUtterance(speechText(text));
-  utterance.lang = "de-DE";
-  utterance.rate = 0.78;
-
-  const voice = getGermanVoice();
-  if (voice) utterance.voice = voice;
-  if (onEnd) utterance.onend = onEnd;
-
-  window.speechSynthesis.speak(utterance);
-}
+  document.getElementById("carpetSelect").addEventListener("change",event=>renderCarpet(Number(event.target.value)));
+  document.getElementById("print").addEventListener("click",()=>window.print());
+  document.getElementById("readAll").addEventListener("click",()=>{
+    if("speechSynthesis" in window)window.speechSynthesis.cancel();const items=[...grid.querySelectorAll(".tile")];let index=0;
+    function next(){if(index>=items.length)return;const text=items[index++].dataset.text;if(text.toLowerCase()==="m")playMmm(next);else speak(text,next)}next();
+  });
+  document.getElementById("reset").addEventListener("click",()=>{if("speechSynthesis" in window)window.speechSynthesis.cancel();document.querySelectorAll(".tile").forEach(tile=>tile.classList.remove("read"));document.querySelectorAll(".letter-chip").forEach(chip=>chip.classList.remove("active"));selectedLetter="";readCount=0;updateProgress();applyLetterFilter()});
+  document.querySelectorAll(".letter-chip").forEach(chip=>chip.addEventListener("click",()=>{const letter=chip.dataset.letter;selectedLetter=selectedLetter===letter?"":letter;document.querySelectorAll(".letter-chip").forEach(button=>button.classList.toggle("active",button.dataset.letter===selectedLetter));applyLetterFilter()}));
+  renderCarpet(0);
+</script>
+</body>
+</html>
